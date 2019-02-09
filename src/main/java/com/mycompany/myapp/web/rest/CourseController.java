@@ -1,5 +1,6 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.UserCourse;
 import com.mycompany.myapp.domain.dto.CourseDto;
 import com.mycompany.myapp.domain.dto.CourseWithTNDto;
 import com.mycompany.myapp.service.CourseService;
@@ -43,8 +44,19 @@ public class CourseController {
         return new ResponseEntity<>(allCourses, HttpStatus.OK);
     }
 
+    @GetMapping(path = "/api/course/findAllUserCourses", produces = "application/json")
+    public HttpEntity<List<UserCourse>> findAllUserCourses(){
+        try{
+            List<UserCourse> allCourses = courseService.findAllUserCourses();
+            return new ResponseEntity<>(allCourses, HttpStatus.OK);
+        } catch(Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
     @PostMapping(path = "/api/course/registerCourse/{courseName}", produces = "application/json")
-    public HttpStatus registerCourse(@PathVariable String courseName) {
+    public HttpStatus registerCourse(@NotNull @PathVariable("courseName") String courseName) {
         try {
             courseService.registerCourse(courseName);
             return HttpStatus.OK;
@@ -63,15 +75,6 @@ public class CourseController {
         }
     }
 
-    @PostMapping(path = "/api/course/createCourse", produces = "application/json")
-    public HttpStatus createCourse(@RequestBody @NotNull CourseDto course) {
-        try {
-            courseService.addCourse(course);
-            return HttpStatus.OK;
-        } catch (Exception e) {
-            return HttpStatus.BAD_REQUEST;
-        }
-    }
 
     @PutMapping(path = "/api/course/updateCourse", produces = "application/json")
     public HttpStatus updateCourse(@RequestBody @NotNull CourseDto course) {
@@ -92,4 +95,15 @@ public class CourseController {
             return HttpStatus.BAD_REQUEST;
         }
     }
+
+    @PutMapping(path = "/api/course/dropCourse", produces = "application/json")
+    public HttpEntity dropCourse(@NotNull @RequestBody UserCourse userCourse){
+        try{
+            courseService.dropCourse(userCourse);
+            return new ResponseEntity<>(null, HttpStatus.OK);
+        } catch (Exception e){
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

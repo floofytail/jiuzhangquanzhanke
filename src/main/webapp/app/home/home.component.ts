@@ -6,6 +6,7 @@ import { LoginModalService, Principal, Account } from 'app/core';
 import { CourseService } from 'app/shared/service/CourseService';
 import { CourseDto } from 'app/shared/model/course-dto.model';
 import { CourseWithTNDto } from 'app/shared/model/courseWithTN-dto.model';
+import { UserCourseDto } from '../shared/model/userCourse-dto.model';
 
 @Component({
     selector: 'jhi-home',
@@ -15,7 +16,7 @@ import { CourseWithTNDto } from 'app/shared/model/courseWithTN-dto.model';
 export class HomeComponent implements OnInit {
     account: Account;
     modalRef: NgbModalRef;
-    classeNameNeedToReg: string;
+    classNameNeedToReg: string;
 
     constructor(
         private principal: Principal,
@@ -27,6 +28,8 @@ export class HomeComponent implements OnInit {
     courses: CourseDto[] = [];
 
     coursesWithTN: CourseWithTNDto[] = [];
+
+    usercourses: UserCourseDto[] = [];
 
     ngOnInit() {
         this.principal.identity().then(account => {
@@ -71,9 +74,31 @@ export class HomeComponent implements OnInit {
         });
     }
 
-    // registerCourse(courseName) {
-    //
-    // }
+    getUserCourses() {
+        this.courseService.getUserCoursesInfo().subscribe(usercoursedto => {
+            if (!usercoursedto) {
+                this.usercourses = [];
+            } else {
+                this.usercourses = usercoursedto;
+            }
+        });
+    }
+
+    registerCourse(courseName: string) {
+        this.classNameNeedToReg = courseName;
+        this.courseService.registerCourse(this.classNameNeedToReg).subscribe(response => {
+            if (!response.Ok) {
+                return;
+            }
+            this.getUserCourses();
+        });
+    }
+
+    dropCourse(userCourse: UserCourseDto) {
+        this.courseService.drop(userCourse).subscribe(response => {
+            this.getUserCourses();
+        });
+    }
 
     clearAllCourses() {
         this.courses = [];

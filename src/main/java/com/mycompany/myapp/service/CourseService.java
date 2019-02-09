@@ -55,18 +55,32 @@ public class CourseService {
         return courseRepository.findAllCoursesDtoWithTeacherName();
     }
 
+    public List<UserCourse> findAllUserCourses() throws Exception{
+        Optional<User> curUser = userService.getUserWithAuthorities();
+
+        if(!curUser.isPresent()){
+            throw new Exception(" can not find user!");
+        }
+        return userCourseRepository.findAllByUser(curUser.get());
+    }
 
     public void registerCourse(String courseName) throws Exception{
         Optional<User> curUser = userService.getUserWithAuthorities();
         Optional<Course> curCourse = courseRepository.findCourseByCourseName(courseName);
 
         if (curUser.isPresent() && curCourse.isPresent()){
-            userCourseRepository.save(UserCourse.builder()
-                .user(curUser.get())
-                .course(curCourse.get())
-                .build());
+            List<UserCourse> userCourses = userCourseRepository.findAllByCourseAndUser(curCourse.get(), curUser.get());
+            if(userCourses.isEmpty()){
+                userCourseRepository.save(UserCourse.builder()
+                    .user(curUser.get())
+                    .course(curCourse.get())
+                    .build());
+            }else{
+                throw new Exception("Already Register Course!");
+            }
+
         } else {
-            throw new Exception("UnExpected Exception");
+            throw new Exception("Course is not Available!");
         }
     }
 
@@ -80,7 +94,7 @@ public class CourseService {
         Course courseBeingSaved = Course.builder()
             .courseName(course.getCourseName())
             .courseContent(course.getCourseContent())
-            .courseLocation(course.getCourseContent())
+            .courseLocation(course.getCourseLocation())
             .teacherId(course.getTeacherId())
             .build();
 
@@ -120,5 +134,16 @@ public class CourseService {
         existingCourse.setCourseName(course.getCourseName());
         existingCourse.setTeacherId(course.getTeacherId());
 
+    }
+
+    public void dropCourse(UserCourse userCourse) throws Exception{
+        Optional<User> curUser = userService.getUserWithAuthorities();
+        Optional<Course> curCourse = courseRepository.findCourseByCourseName(userCourse.getCourse().getCourseName());
+
+        if (curUser.isPresent() && curCourse.isPresent()){
+            userCourseRepository.delete(userCourse);
+        } else{
+            throw new Exception("Cannot Drop Course");
+        }
     }
 }
